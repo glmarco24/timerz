@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('last_name');
             $table->string('email')->unique();
 //            $table->timestamp('email_verified_at')->nullable(); // I removed this, but it should exist in real app
+            $table->string('personal_number')->unique();
             $table->string('password');
             $table->string('company_name')->nullable();
             $table->string('organization_number');
@@ -42,4 +43,4 @@ return new class extends Migration
         Schema::dropIfExists('users');
         Schema::dropIfExists('sessions');
     }
-}; 
+};
