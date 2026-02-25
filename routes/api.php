@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
+use App\Http\Controllers\AuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -13,9 +15,13 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/ping', function () {
-    return response()->json(['message' => 'pongic']);
+    return response()->json(['message' => 'pong']);
 });
 
-// Example placeholder for REST resources
-// Route::apiResource('tasks', App\Http\Controllers\TaskController::class);
+Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+    return $request->user();
+});
 
+// Authentication
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
