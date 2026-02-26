@@ -11,7 +11,7 @@ class AuthController extends Controller
 {
     public function login(LoginRequest $request): JsonResponse
     {
-        $credentials = $request->only(['email', 'password']);
+        $credentials = $request->only(['personal_number', 'password']);
 
         if (! Auth::attempt($credentials)) {
             return response()->json([
@@ -36,4 +36,3 @@ class AuthController extends Controller
         return response()->json([], 204);
     }
 }
-
