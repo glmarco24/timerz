@@ -15,3 +15,7 @@ export async function logoutApi() {
   return data;
 }
 
+export async function getMeApi() {
+  const { data } = await http.get('/api/me');
+  return data;
+}

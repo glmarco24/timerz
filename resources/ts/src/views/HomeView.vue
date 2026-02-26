@@ -1,13 +1,30 @@
 <template>
-  <div class="flex flex-col items-center py-16">
-    <h1 class="text-3xl font-semibold mb-4">Timetjek</h1>
-    <router-link
-      to="/login"
-      class="text-blue-600 hover:underline"
-    >Go to Login</router-link>
+  <div class="min-h-screen flex">
+    <SideMenu />
+
+    <div class="flex-1 min-w-0">
+      <TopBar :title="`Hello, ${fullName}`" />
+
+      <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-16">
+        <div class="text-center py-16">
+          <h1 class="text-4xl sm:text-5xl font-bold">Welcome to Timetjek</h1>
+          <p class="mt-2 text-sm text-gray-500">(This page does absolutely nothing)</p>
+        </div>
+      </div>
+    </div>
   </div>
+  
 </template>
 
 <script setup lang="ts">
-</script>
+import SideMenu from '../components/layout/SideMenu.vue';
+import TopBar from '../components/layout/TopBar.vue';
+import { useAuth } from '../composables/useAuth';
+import { computed } from 'vue';
 
+const { state } = useAuth();
+const user = computed(() => (state.user ?? {}) as Record<string, any>);
+const fullName = computed(() => `${user.value.first_name ?? ''} ${user.value.last_name ?? ''}`.trim() || 'User');
+
+ 
+</script>

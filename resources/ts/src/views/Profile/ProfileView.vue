@@ -1,14 +1,24 @@
 <template>
   <div class="min-h-screen flex">
     <!-- Left navigation -->
-    <SideMenu :items="menu" />
+    <SideMenu />
 
     <!-- Main content -->
     <div class="flex-1 min-w-0">
-      <TopBar :title="`Welcome, ${fullName}`" subtitle="Manage your account here" />
+      <TopBar :title="`Hello, ${fullName}`" />
 
       <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
-        <h2 class="text-xl font-semibold mb-4">Profile</h2>
+        <div class="mb-4 flex items-center justify-between">
+          <h2 class="text-xl font-semibold">Profile</h2>
+          <button
+            class="inline-flex items-center gap-2 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+            @click="handleSave"
+            :disabled="saving"
+          >
+            <span class="material-symbols-outlined text-base">save</span>
+            Save
+          </button>
+        </div>
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <!-- Form -->
           <div class="lg:col-span-2 space-y-8">
@@ -49,7 +59,7 @@
                     <option>1 hour</option>
                   </select>
                 </div>
-                <div class="flex items-end">
+                <div class="flex items-center justify-center self-center">
                   <label class="inline-flex items-center gap-2">
                     <input type="checkbox" class="rounded border-gray-300 text-sky-600 focus:ring-sky-600" />
                     <span class="text-sm text-gray-700">Disable password login</span>
@@ -88,7 +98,7 @@
 <script setup lang="ts">
 import TopBar from '../../components/layout/TopBar.vue';
 import SideMenu from '../../components/layout/SideMenu.vue';
-import { computed, reactive } from 'vue';
+import { computed, reactive, ref } from 'vue';
 import { useAuth } from '../../composables/useAuth';
 import { RouterLink } from 'vue-router';
 
@@ -105,15 +115,23 @@ const form = reactive({
   password: '',
 });
 
-const menu = [
-  { label: 'Overview', to: '/', icon: 'home' },
-  { label: 'Profile', to: '/profile', icon: 'account_circle' },
-  { label: 'My companies', to: '/companies', icon: 'apartment' },
-];
+
 
 const initials = computed(() => {
   const a = (form.first_name || '').trim()[0] || '';
   const b = (form.last_name || '').trim()[0] || '';
   return (a + b).toUpperCase() || 'U';
 });
+
+const saving = ref(false);
+async function handleSave() {
+  if (saving.value) return;
+  saving.value = true;
+  try {
+    // TODO: hook to API endpoint to persist profile
+    console.log('Save profile', { ...form });
+  } finally {
+    saving.value = false;
+  }
+}
 </script>

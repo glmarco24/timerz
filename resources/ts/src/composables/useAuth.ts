@@ -1,5 +1,5 @@
 import { reactive } from 'vue';
-import { loginApi, logoutApi, type LoginPayload } from '../api/auth.api';
+import { loginApi, logoutApi, getMeApi, type LoginPayload } from '../api/auth.api';
 
 type UserLike = Record<string, unknown> | null;
 
@@ -38,6 +38,20 @@ export function useAuth() {
     }
   }
 
-  return { state, login, logout };
-}
+  async function loadUser() {
+    try {
+      state.loading = true;
+      const data = await getMeApi();
+      state.user = (data as any)?.user ?? null;
+      state.isAuthenticated = !!state.user;
+      return state.user;
+    } catch (e) {
+      state.isAuthenticated = false;
+      state.user = null;
+    } finally {
+      state.loading = false;
+    }
+  }
 
+  return { state, login, logout, loadUser };
+}
