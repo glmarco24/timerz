@@ -8,8 +8,10 @@ export interface MenuItem {
 export function useMenu(): MenuItem[] {
   return [
     { label: 'Overview', to: '/', icon: 'home' },
-    { label: 'My companies', to: '/companies', icon: 'apartment' },
+    { label: 'Time', to: '/companies', icon: 'schedule' },
+    { label: 'Calendar', to: '/calendar', icon: 'event' },
+    { label: 'Money', to: '/money', icon: 'payments' },
+    { label: 'Book', to: '/book', icon: 'book' },
     { label: 'Profile', to: '/profile', icon: 'account_circle', bottom: true },
   ];
 }
-

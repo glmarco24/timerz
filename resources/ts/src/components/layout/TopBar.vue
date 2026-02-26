@@ -1,19 +1,24 @@
 <template>
-  <header class="w-full bg-sky-800 text-white">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3 sm:py-4 flex items-center justify-between">
-      <div>
-        <h1 class="text-lg sm:text-xl font-semibold leading-tight">{{ title }}</h1>
-        <p v-if="subtitle" class="hidden md:block text-sky-100 text-xs mt-1">{{ subtitle }}</p>
+  <header class="w-full bg-white text-sky-800 border-b border-gray-200">
+    <div class="px-2 sm:px-4 lg:px-6 py-3 sm:py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3 sm:gap-4">
+        <div class="h-8 w-8 rounded-full bg-sky-100 flex items-center justify-center">
+          <span class="text-sky-800 text-lg">✓</span>
+        </div>
+        <div class="text-2xl sm:text-3xl font-bold leading-none">Timetjek</div>
+        <div v-if="title">
+          <h1 class="text-lg sm:text-xl font-semibold leading-tight">{{ title }}</h1>
+          <p v-if="subtitle" class="hidden md:block text-sky-600 text-xs mt-1">{{ subtitle }}</p>
+        </div>
       </div>
       <div class="hidden sm:flex items-center gap-2">
         <slot name="actions" />
       </div>
     </div>
   </header>
-  <div class="hidden md:block h-1 bg-sky-900"></div>
-  <div class="hidden md:block h-1 bg-sky-700"></div>
+  
 </template>
 
 <script setup lang="ts">
-defineProps<{ title: string; subtitle?: string }>();
+defineProps<{ title?: string; subtitle?: string }>();
 </script>

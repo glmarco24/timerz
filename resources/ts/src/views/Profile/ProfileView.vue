@@ -5,13 +5,22 @@
 
     <!-- Main content -->
     <div class="flex-1 min-w-0">
-      <TopBar :title="`Hello, ${fullName}`" />
+      <TopBar />
+
+      <!-- Page banner -->
+      <div class="w-full bg-sky-900 text-white">
+        <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-4 sm:py-8 text-center">
+          <h1 class="text-xl sm:text-4xl font-semibold sm:font-bold">
+            <span class="hidden sm:inline">Welcome, </span>{{ fullName }}
+          </h1>
+        </div>
+      </div>
 
       <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
         <div class="mb-4 flex items-center justify-between">
           <h2 class="text-xl font-semibold">Profile</h2>
           <button
-            class="inline-flex items-center gap-2 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+            class="inline-flex items-center gap-2 rounded-md bg-sky-800 hover:bg-sky-900 text-white px-4 py-2 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
             @click="handleSave"
             :disabled="saving"
           >

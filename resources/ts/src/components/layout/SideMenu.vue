@@ -1,10 +1,5 @@
 <template>
-  <aside class="w-16 bg-sky-900 text-sky-100 min-h-screen py-4 md:py-6 flex flex-col">
-    <div class="px-3 mb-6 flex items-center justify-center">
-      <div class="h-8 w-8 rounded-full bg-white/20 flex items-center justify-center">
-        <span class="text-white text-lg">✓</span>
-      </div>
-    </div>
+  <aside class="w-16 bg-sky-900 text-sky-100 min-h-screen pb-4 md:pb-6 flex flex-col">
 
     <nav class="px-1">
       <RouterLink
