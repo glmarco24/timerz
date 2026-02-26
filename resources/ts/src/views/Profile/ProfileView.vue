@@ -100,6 +100,7 @@ import TopBar from '../../components/layout/TopBar.vue';
 import SideMenu from '../../components/layout/SideMenu.vue';
 import { computed, reactive, ref } from 'vue';
 import { useAuth } from '../../composables/useAuth';
+import { updateMeApi } from '../../api/auth.api';
 import { RouterLink } from 'vue-router';
 
 const { state } = useAuth();
@@ -128,8 +129,20 @@ async function handleSave() {
   if (saving.value) return;
   saving.value = true;
   try {
-    // TODO: hook to API endpoint to persist profile
-    console.log('Save profile', { ...form });
+    const payload: any = {
+      first_name: form.first_name,
+      last_name: form.last_name,
+      email: form.email,
+      phone: form.phone || undefined,
+    };
+    if (form.password && form.password.trim().length) {
+      payload.password = form.password;
+    }
+    const data = await updateMeApi(payload);
+    state.user = (data as any)?.user ?? state.user;
+    form.password = '';
+  } catch (e: any) {
+    console.error('Failed to save profile', e?.response?.data || e);
   } finally {
     saving.value = false;
   }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\LogoutRequest;
+use App\Http\Requests\Auth\UpdateMeRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 
@@ -34,5 +35,22 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return response()->json([], 204);
+    }
+
+    public function update(UpdateMeRequest $request): JsonResponse
+    {
+        $user = $request->user();
+        $data = $request->validated();
+
+        if (empty($data['password'] ?? null)) {
+            unset($data['password']);
+        }
+
+        $user->fill($data);
+        $user->save();
+
+        return response()->json([
+            'user' => $user->fresh(),
+        ]);
     }
 }

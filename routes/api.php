@@ -32,3 +32,4 @@ Route::middleware('auth:sanctum')->get('/me', function (Request $request) {
 // Authentication
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+Route::put('/me', [AuthController::class, 'update'])->middleware('auth:sanctum');

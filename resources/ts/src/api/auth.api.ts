@@ -19,3 +19,16 @@ export async function getMeApi() {
   const { data } = await http.get('/api/me');
   return data;
 }
+
+export interface UpdateMePayload {
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone?: string;
+  password?: string;
+}
+
+export async function updateMeApi(payload: UpdateMePayload) {
+  const { data } = await http.put('/api/me', payload);
+  return data;
+}
