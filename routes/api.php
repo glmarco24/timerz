@@ -25,6 +25,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 
     Route::get('/companies', [CompanyController::class, 'index']);
-    Route::get('/companies/{company}/staff', [MembershipController::class, 'staff']);
+    Route::get('/companies/{company}/staff', [MembershipController::class, 'index']);
 
 });

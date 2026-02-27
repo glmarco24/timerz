@@ -170,7 +170,7 @@
 import SideMenu from '../../components/layout/SideMenu.vue';
 import TopBar from '../../components/layout/TopBar.vue';
 import { ref, reactive } from 'vue';
-import { getTimeFormData } from '../../api/time.api';
+import { getTimeFormData, getCompanyStaff } from '../../api/time.api';
 import { watch } from 'vue';
 
 interface Row { id: number; name: string; in: string; out: string; break: string; hours: string }
@@ -224,7 +224,7 @@ watch(
   async (val) => {
     if (!val) { staff.value = []; form.user_id = '' as any; return; }
     try {
-      const data: any = await getTimeFormData(Number(val));
+      const data: any = await getCompanyStaff(Number(val));
       staff.value = data?.staff || [];
       if (!form.user_id && staff.value.length) form.user_id = staff.value[0].id;
     } catch {}

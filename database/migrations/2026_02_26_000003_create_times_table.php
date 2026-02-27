@@ -18,6 +18,8 @@ return new class extends Migration
             $table->date('date');
             $table->time('start_time')->nullable();
             $table->time('end_time')->nullable();
+            $table->decimal('latitude', 10, 7)->nullable();
+            $table->decimal('longitude', 10, 7)->nullable();
             $table->string('status')->nullable();
             $table->string('benefit')->nullable();
             $table->text('comment')->nullable();
@@ -33,4 +35,3 @@ return new class extends Migration
         Schema::dropIfExists('times');
     }
 };
-

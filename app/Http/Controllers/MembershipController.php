@@ -10,7 +10,7 @@ class MembershipController extends Controller
     /**
      * Return staff for a given company the user actively owns.
      */
-    public function staff(Request $request, int $company): JsonResponse
+    public function index(Request $request, int $company): JsonResponse
     {
         $user = $request->user();
 
