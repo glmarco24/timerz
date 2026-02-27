@@ -16,7 +16,7 @@
             <button class="h-9 w-9 inline-flex items-center justify-center rounded-full bg-sky-100 text-sky-700 hover:bg-sky-200" title="Export">
               <span class="material-symbols-outlined">download</span>
             </button>
-            <button class="h-9 w-9 inline-flex items-center justify-center rounded-full bg-sky-100 text-sky-700 hover:bg-sky-200" title="Add" @click="openGeo">
+            <button class="h-9 w-9 inline-flex items-center justify-center rounded-full bg-sky-100 text-sky-700 hover:bg-sky-200" title="Add" @click="openAdd">
               <span class="material-symbols-outlined">add</span>
             </button>
           </div>
@@ -109,27 +109,46 @@
     </div>
   </div>
 
-  <!-- Geolocation modal -->
-  <div v-if="geoOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-    <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-5">
-      <div class="flex items-center justify-between mb-3">
-        <h3 class="text-lg font-semibold">Your location</h3>
-        <button class="h-8 w-8 inline-flex items-center justify-center rounded-md hover:bg-gray-100" @click="geoOpen=false">
+  <!-- Add time modal -->
+  <div v-if="addOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-2xl">
+      <div class="px-5 py-4 border-b flex items-center justify-between">
+        <h3 class="text-lg font-semibold">Add time</h3>
+        <button class="h-8 w-8 inline-flex items-center justify-center rounded-md hover:bg-gray-100" @click="closeAdd">
           <span class="material-symbols-outlined">close</span>
         </button>
       </div>
-      <div v-if="!isSupported" class="text-sm text-red-600">Geolocation not supported.</div>
-      <div v-else-if="error" class="text-sm text-red-600">{{ String(error) }}</div>
-      <div v-else-if="!locatedAt" class="text-sm text-gray-600">Fetching location…</div>
-      <div v-else class="space-y-1 text-sm">
-        <div>Latitude: <span class="font-mono">{{ Number(coords.latitude).toFixed(6) }}</span></div>
-        <div>Longitude: <span class="font-mono">{{ Number(coords.longitude).toFixed(6) }}</span></div>
-        <div v-if="coords.accuracy">Accuracy: {{ Math.round(Number(coords.accuracy)) }} m</div>
+      <div class="p-5">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm text-gray-700 mb-1">Date</label>
+            <input type="date" v-model="form.date" class="w-full rounded-md border border-gray-300 px-3 py-2" />
+          </div>
+          <div>
+            <label class="block text-sm text-gray-700 mb-1">Benefit</label>
+            <input type="text" placeholder="e.g. Regular" v-model="form.benefit" class="w-full rounded-md border border-gray-300 px-3 py-2" />
+          </div>
+          <div>
+            <label class="block text-sm text-gray-700 mb-1" @click="openTime('start')">Start</label>
+            <div class="w-full" @click="openTime('start')">
+              <input ref="startRef" type="time" v-model="form.start_time" class="w-full cursor-pointer rounded-md border border-gray-300 px-3 py-2" />
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm text-gray-700 mb-1" @click="openTime('end')">End</label>
+            <div class="w-full" @click="openTime('end')">
+              <input ref="endRef" type="time" v-model="form.end_time" class="w-full cursor-pointer rounded-md border border-gray-300 px-3 py-2" />
+            </div>
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-sm text-gray-700 mb-1">Comment</label>
+            <textarea rows="3" v-model="form.comment" class="w-full rounded-md border border-gray-300 px-3 py-2"></textarea>
+          </div>
+        </div>
       </div>
-      <div class="mt-4 text-right">
-        <button class="inline-flex items-center gap-2 rounded-md bg-sky-800 hover:bg-sky-900 text-white px-3 py-2 text-sm" @click="geoOpen=false">
-          Close
-        </button>
+      <div class="px-5 py-4 border-t flex items-center justify-end gap-2">
+        <button class="rounded-md px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200" @click="closeAdd">Cancel</button>
+        <button class="rounded-md px-3 py-2 text-sm text-white bg-sky-800 hover:bg-sky-900" @click="saveAdd">Save</button>
       </div>
     </div>
   </div>
@@ -138,8 +157,7 @@
 <script setup lang="ts">
 import SideMenu from '../../components/layout/SideMenu.vue';
 import TopBar from '../../components/layout/TopBar.vue';
-import { ref } from 'vue';
-import { useGeolocation } from '@vueuse/core';
+import { ref, reactive } from 'vue';
 
 interface Row { id: number; name: string; in: string; out: string; break: string; hours: string }
 interface Section { date: string; label: string; rows: Row[] }
@@ -162,15 +180,39 @@ const sections = ref<Section[]>([
   },
 ]);
 
-const geoOpen = ref(false);
-const { coords, error, locatedAt, resume, isSupported } = useGeolocation({
-  enableHighAccuracy: true,
-  timeout: 8000,
-  maximumAge: 0,
+const addOpen = ref(false);
+const today = new Date().toISOString().slice(0, 10);
+const form = reactive({
+  date: today,
+  start_time: '',
+  end_time: '',
+  benefit: '',
+  comment: '',
 });
 
-function openGeo() {
-  geoOpen.value = true;
-  resume();
+function openAdd() {
+  addOpen.value = true;
+}
+function closeAdd() {
+  addOpen.value = false;
+}
+function saveAdd() {
+  // Placeholder for API call — just log and close
+  console.log('Add time', { ...form });
+  closeAdd();
+}
+
+const startRef = ref<HTMLInputElement | null>(null);
+const endRef = ref<HTMLInputElement | null>(null);
+function openTime(which: 'start' | 'end') {
+  const el = which === 'start' ? startRef.value : endRef.value;
+  if (!el) return;
+  try {
+    // @ts-ignore - showPicker may not exist in TS lib
+    if (typeof (el as any).showPicker === 'function') (el as any).showPicker();
+    else el.focus();
+  } catch {
+    el.focus();
+  }
 }
 </script>
