@@ -122,45 +122,66 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label class="block text-sm text-gray-700 mb-1">Date</label>
-            <input type="date" v-model="form.date" class="w-full rounded-md border border-gray-300 px-3 py-2" />
+            <input type="date" v-model="form.date" :class="['w-full rounded-md border px-3 py-2', errors.date ? 'border-red-500' : 'border-gray-300']" />
+            <p v-if="errors.date" class="mt-1 text-sm text-red-600">{{ errors.date }}</p>
           </div>
           <div>
             <label class="block text-sm text-gray-700 mb-1">Workplace</label>
-            <select v-model="form.company_id" class="w-full rounded-md border border-gray-300 px-3 py-2">
+            <select v-model="form.company_id" :class="['w-full rounded-md border px-3 py-2', errors.company_id ? 'border-red-500' : 'border-gray-300']">
               <option v-for="wp in workplaces" :key="wp.id" :value="wp.id">{{ wp.name }}</option>
             </select>
+            <p v-if="errors.company_id" class="mt-1 text-sm text-red-600">{{ errors.company_id }}</p>
           </div>
           <div>
             <label class="block text-sm text-gray-700 mb-1">Staff</label>
-            <select v-model="form.user_id" class="w-full rounded-md border border-gray-300 px-3 py-2">
+            <select v-model="form.user_id" :class="['w-full rounded-md border px-3 py-2', errors.user_id ? 'border-red-500' : 'border-gray-300']">
               <option v-for="u in staff" :key="u.id" :value="u.id">{{ u.first_name }} {{ u.last_name }}</option>
             </select>
+            <p v-if="errors.user_id" class="mt-1 text-sm text-red-600">{{ errors.user_id }}</p>
           </div>
           <div>
             <label class="block text-sm text-gray-700 mb-1">Benefit</label>
             <input type="text" placeholder="e.g. Regular" v-model="form.benefit" class="w-full rounded-md border border-gray-300 px-3 py-2" />
           </div>
+          
           <div>
-            <label class="block text-sm text-gray-700 mb-1" @click="openTime('start')">Start</label>
-            <div class="w-full" @click="openTime('start')">
-              <input ref="startRef" type="time" v-model="form.start_time" class="w-full cursor-pointer rounded-md border border-gray-300 px-3 py-2" />
-            </div>
+            <label class="block text-sm text-gray-700 mb-1">Start</label>
+            <Datepicker
+              v-model="form.start_time"
+              time-picker
+              :is-24="true"
+              :enable-seconds="false"
+              model-type="format"
+              format="HH:mm"
+              :minutes-increment="1"
+              :input-class="['w-full rounded-md border px-3 py-2', errors.start_time ? 'border-red-500' : 'border-gray-300'].join(' ')"
+            />
+            <p v-if="errors.start_time" class="mt-1 text-sm text-red-600">{{ errors.start_time }}</p>
           </div>
           <div>
-            <label class="block text-sm text-gray-700 mb-1" @click="openTime('end')">End</label>
-            <div class="w-full" @click="openTime('end')">
-              <input ref="endRef" type="time" v-model="form.end_time" class="w-full cursor-pointer rounded-md border border-gray-300 px-3 py-2" />
-            </div>
+            <label class="block text-sm text-gray-700 mb-1">End</label>
+            <Datepicker
+              v-model="form.end_time"
+              time-picker
+              :is-24="true"
+              :enable-seconds="false"
+              model-type="format"
+              format="HH:mm"
+              :minutes-increment="1"
+              :input-class="['w-full rounded-md border px-3 py-2', errors.end_time ? 'border-red-500' : 'border-gray-300'].join(' ')"
+            />
+            <p v-if="errors.end_time" class="mt-1 text-sm text-red-600">{{ errors.end_time }}</p>
           </div>
           <div class="md:col-span-2">
             <label class="block text-sm text-gray-700 mb-1">Comment</label>
-            <textarea rows="3" v-model="form.comment" class="w-full rounded-md border border-gray-300 px-3 py-2"></textarea>
+            <textarea rows="3" v-model="form.comment" :class="['w-full rounded-md border px-3 py-2', errors.comment ? 'border-red-500' : 'border-gray-300']"></textarea>
+            <p v-if="errors.comment" class="mt-1 text-sm text-red-600">{{ errors.comment }}</p>
           </div>
         </div>
       </div>
       <div class="px-5 py-4 border-t flex items-center justify-end gap-2">
         <button class="rounded-md px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200" @click="closeAdd">Cancel</button>
-        <button class="rounded-md px-3 py-2 text-sm text-white bg-sky-800 hover:bg-sky-900" @click="saveAdd">Save</button>
+        <button :disabled="saving" class="rounded-md px-3 py-2 text-sm text-white bg-sky-800 hover:bg-sky-900 disabled:opacity-60 disabled:cursor-not-allowed" @click="saveAdd">Save</button>
       </div>
     </div>
   </div>
@@ -169,9 +190,10 @@
 <script setup lang="ts">
 import SideMenu from '../../components/layout/SideMenu.vue';
 import TopBar from '../../components/layout/TopBar.vue';
-import { ref, reactive } from 'vue';
-import { getTimeFormData, getCompanyStaff } from '../../api/time.api';
-import { watch } from 'vue';
+import Datepicker from '@vuepic/vue-datepicker';
+import '@vuepic/vue-datepicker/dist/main.css';
+import { ref, reactive, watch } from 'vue';
+import { getTimeFormData, getCompanyStaff, createTime } from '../../api/time.api';
 
 interface Row { id: number; name: string; in: string; out: string; break: string; hours: string }
 interface Section { date: string; label: string; rows: Row[] }
@@ -207,6 +229,9 @@ const form = reactive({
   user_id: '' as number | '',
 });
 
+const errors = reactive<Record<string, string>>({});
+const saving = ref(false);
+
 function openAdd() {
   addOpen.value = true;
   getTimeFormData()
@@ -233,23 +258,67 @@ watch(
 function closeAdd() {
   addOpen.value = false;
 }
-function saveAdd() {
-  // Placeholder for API call — just log and close
-  console.log('Add time', { ...form });
-  closeAdd();
-}
+async function saveAdd() {
+  if (saving.value) return;
+  // client-side validation
+  Object.keys(errors).forEach(k => delete (errors as any)[k]);
+  const req: Array<[keyof typeof form, string]> = [
+    ['company_id', 'Workplace is required'],
+    ['user_id', 'Staff is required'],
+    ['date', 'Date is required'],
+    ['start_time', 'Start time is required'],
+    ['comment', 'Comment is required'],
+  ];
+  for (const [key, msg] of req) {
+    const val = (form as any)[key];
+    if (val === '' || val === undefined || val === null) {
+      (errors as any)[key] = msg;
+    }
+  }
+  if (form.start_time && form.end_time && form.end_time <= form.start_time) {
+    errors.end_time = 'End time must be later than start time.';
+  }
+  if (Object.keys(errors).length) return;
 
-const startRef = ref<HTMLInputElement | null>(null);
-const endRef = ref<HTMLInputElement | null>(null);
-function openTime(which: 'start' | 'end') {
-  const el = which === 'start' ? startRef.value : endRef.value;
-  if (!el) return;
+  saving.value = true;
   try {
-    // @ts-ignore - showPicker may not exist in TS lib
-    if (typeof (el as any).showPicker === 'function') (el as any).showPicker();
-    else el.focus();
-  } catch {
-    el.focus();
+    const coords = await getCoords();
+    const payload = {
+      company_id: Number(form.company_id),
+      user_id: Number(form.user_id),
+      date: form.date,
+      start_time: form.start_time,
+      end_time: form.end_time || undefined,
+      benefit: form.benefit || undefined,
+      comment: form.comment,
+      latitude: coords?.latitude ?? undefined,
+      longitude: coords?.longitude ?? undefined,
+    };
+    await createTime(payload as any);
+    closeAdd();
+  } catch (e: any) {
+    const data = e?.response?.data;
+    const fieldErrors = data?.errors as Record<string, string[] | string> | undefined;
+    if (fieldErrors) {
+      for (const [k, v] of Object.entries(fieldErrors)) {
+        (errors as any)[k] = Array.isArray(v) ? (v[0] || '') : String(v);
+      }
+    }
+  } finally {
+    saving.value = false;
   }
 }
+
+function getCoords(): Promise<{ latitude: number; longitude: number } | null> {
+  return new Promise((resolve) => {
+    if (!('geolocation' in navigator)) return resolve(null);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
+      () => resolve(null),
+      { enableHighAccuracy: false, timeout: 5000, maximumAge: 60000 }
+    );
+  });
+}
+
+// Using @vuepic/vue-datepicker for 24h time selection
 </script>

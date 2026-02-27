@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\MembershipController;
+use App\Http\Controllers\TimesController;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,5 +27,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/companies', [CompanyController::class, 'index']);
     Route::get('/companies/{company}/staff', [MembershipController::class, 'index']);
+    Route::post('/times', [TimesController::class, 'store']);
 
 });
