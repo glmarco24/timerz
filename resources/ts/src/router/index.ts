@@ -4,11 +4,13 @@ import { useAuth } from '../composables/useAuth';
 const HomeView = () => import('../views/HomeView.vue');
 const LoginView = () => import('../views/Auth/LoginView.vue');
 const ProfileView = () => import('../views/Profile/ProfileView.vue');
+const TimeView = () => import('../views/Time/TimeView.vue');
 
 const routes: RouteRecordRaw[] = [
   { path: '/', name: 'home', component: HomeView },
   { path: '/login', name: 'login', component: LoginView },
-  { path: '/profile', name: 'profile', component: ProfileView, meta: { requiresAuth: true } },
+  { path: '/profile', name: 'profile', component: ProfileView },
+  { path: '/time', name: 'time', component: TimeView },
 ];
 
 const router = createRouter({
@@ -16,17 +18,13 @@ const router = createRouter({
   routes,
 });
 
-// Global auth guard
+// Global auth guard: require auth for all routes except login
 router.beforeEach(async (to) => {
   const { state, loadUser } = useAuth();
 
-  if (to.meta?.requiresAuth) {
-    if (!state.isAuthenticated) {
-      await loadUser();
-    }
-    if (!state.isAuthenticated) {
-      return { name: 'login', query: { redirect: to.fullPath } };
-    }
+  if (to.name !== 'login') {
+    if (!state.isAuthenticated) await loadUser();
+    if (!state.isAuthenticated) return { name: 'login', query: { redirect: to.fullPath } };
   }
 
   if (to.name === 'login' && state.isAuthenticated) {

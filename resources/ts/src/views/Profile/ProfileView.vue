@@ -92,7 +92,7 @@
                 <RouterLink to="/profile" class="block w-full px-4 py-2 rounded-md bg-gray-100 text-gray-700 text-sm">
                   Profile
                 </RouterLink>
-                <RouterLink to="/companies" class="block w-full px-4 py-2 rounded-md hover:bg-gray-100 text-gray-700 text-sm">
+                <RouterLink to="/time" class="block w-full px-4 py-2 rounded-md hover:bg-gray-100 text-gray-700 text-sm">
                   My companies
                 </RouterLink>
               </div>
