@@ -29,3 +29,20 @@ export async function createTime(payload: CreateTimePayload) {
   const { data } = await http.post('/api/times', payload);
   return data as { message: string; time: any };
 }
+
+export type TimeListItem = {
+  id: number;
+  date: string; // YYYY-MM-DD
+  start_time: string | null;
+  end_time: string | null;
+  status: string;
+  benefit: string | null;
+  comment: string | null;
+  user: { id: number; first_name: string; last_name: string };
+  company: { id: number; name: string };
+};
+
+export async function getTimes() {
+  const { data } = await http.get('/api/times');
+  return data as { times: TimeListItem[] };
+}

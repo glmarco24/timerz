@@ -5,9 +5,31 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Time\StoreTimeRequest;
 use App\Models\Time;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class TimesController extends Controller
 {
+    public function index(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $companyIds = $user->activeOwnerCompanies()->pluck('companies.id');
+
+        $times = Time::with([
+                'user:id,first_name,last_name',
+                'company:id,name',
+            ])
+            ->whereIn('company_id', $companyIds)
+            ->orderByDesc('date')
+            ->orderByDesc('start_time')
+            ->get([
+                'id', 'user_id', 'company_id', 'date', 'start_time', 'end_time', 'status', 'benefit', 'comment'
+            ]);
+
+        return response()->json([
+            'times' => $times,
+        ]);
+    }
+
     public function store(StoreTimeRequest $request): JsonResponse
     {
         $user = $request->user();

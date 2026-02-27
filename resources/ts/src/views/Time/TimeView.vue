@@ -46,12 +46,9 @@
           <select class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm">
             <option>View changes</option>
           </select>
-          <div class="flex">
-            <select class="w-40 rounded-l-md border border-gray-300 bg-white px-3 py-2 text-sm">
-              <option>All statuses</option>
-            </select>
-            <input class="flex-1 rounded-r-md border border-l-0 border-gray-300 bg-white px-3 py-2 text-sm" placeholder="Search staff..." />
-          </div>
+          <select class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm">
+            <option>All statuses</option>
+          </select>
         </div>
 
         <!-- Table -->
@@ -79,7 +76,7 @@
                 <div class="h-6 w-6 rounded-full bg-gray-200"></div>
                 <div>
                   <div class="text-sm font-medium text-gray-900">{{ row.name }}</div>
-                  <div class="text-xs text-gray-500">Braingeneers</div>
+                  <div class="text-xs text-gray-500">{{ row.company }}</div>
                 </div>
               </div>
               <div class="col-span-4 md:col-span-1 text-sm text-gray-700">{{ row.in }}</div>
@@ -91,8 +88,8 @@
                 <span class="material-symbols-outlined text-sky-700 text-base">note</span>
               </div>
               <div class="col-span-3 md:col-span-1">
-                <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 text-xs px-2 py-1">
-                  <span class="material-symbols-outlined text-sm">check_circle</span> Completed
+                <span class="inline-flex items-center gap-1 rounded-full bg-gray-100 text-gray-700 text-xs px-2 py-1">
+                  <span class="material-symbols-outlined text-sm">info</span> {{ row.status }}
                 </span>
               </div>
               <div class="col-span-3 md:col-span-1 flex gap-1 justify-end md:justify-start">
@@ -193,28 +190,12 @@ import TopBar from '../../components/layout/TopBar.vue';
 import Datepicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 import { ref, reactive, watch } from 'vue';
-import { getTimeFormData, getCompanyStaff, createTime } from '../../api/time.api';
+import { getTimeFormData, getCompanyStaff, createTime, getTimes, type TimeListItem } from '../../api/time.api';
 
-interface Row { id: number; name: string; in: string; out: string; break: string; hours: string }
+interface Row { id: number; name: string; company: string; in: string; out: string; break: string; hours: string; status: string }
 interface Section { date: string; label: string; rows: Row[] }
 
-const sections = ref<Section[]>([
-  {
-    date: '2026-02-26',
-    label: 'Thursday, February 26',
-    rows: [
-      { id: 1, name: 'Marko Gligorijevic', in: '16:20', out: '18:24', break: '-', hours: '2 hours 4 minutes' },
-      { id: 2, name: 'Marko Gligorijevic', in: '16:25', out: '18:24', break: '-', hours: '1 hour 59 minutes' },
-    ],
-  },
-  {
-    date: '2026-02-25',
-    label: 'Wednesday, February 25',
-    rows: [
-      { id: 3, name: 'Marko Gligorijevic', in: '17:58', out: '18:23', break: '-', hours: '0 hours 25 minutes' },
-    ],
-  },
-]);
+const sections = ref<Section[]>([]);
 
 const addOpen = ref(false);
 const workplaces = ref<Array<{ id: number; name: string }>>([]);
@@ -241,6 +222,59 @@ function openAdd() {
       if (data?.defaults?.date) form.date = String(data.defaults.date);
     })
     .catch(() => {});
+}
+
+function formatSectionLabel(d: string) {
+  const dt = new Date(d + 'T00:00:00');
+  return new Intl.DateTimeFormat(undefined, { weekday: 'long', month: 'long', day: 'numeric' }).format(dt);
+}
+
+function computeHours(start: string | null, end: string | null) {
+  if (!start || !end) return '-';
+  const [sh, sm] = start.split(':').map(Number);
+  const [eh, em] = end.split(':').map(Number);
+  const startMin = sh * 60 + sm;
+  const endMin = eh * 60 + em;
+  const diff = endMin - startMin;
+  if (diff <= 0) return '-';
+  const h = Math.floor(diff / 60);
+  const m = diff % 60;
+  const hp = h === 1 ? 'hour' : 'hours';
+  const mp = m === 1 ? 'minute' : 'minutes';
+  if (h && m) return `${h} ${hp} ${m} ${mp}`;
+  if (h) return `${h} ${hp}`;
+  return `${m} ${mp}`;
+}
+
+function nameOf(u: { first_name: string; last_name: string }) {
+  return `${u.first_name ?? ''} ${u.last_name ?? ''}`.trim();
+}
+
+async function loadTimes() {
+  try {
+    const { times } = await getTimes();
+    const byDate = new Map<string, Row[]>();
+    for (const t of times as TimeListItem[]) {
+      const date = t.date;
+      const rows = byDate.get(date) ?? [];
+      rows.push({
+        id: t.id,
+        name: nameOf(t.user),
+        company: t.company?.name ?? '',
+        in: t.start_time || '-',
+        out: t.end_time || '-',
+        break: '-',
+        hours: computeHours(t.start_time, t.end_time),
+        status: t.status,
+      });
+      byDate.set(date, rows);
+    }
+    sections.value = Array.from(byDate.entries())
+      .sort((a, b) => (a[0] < b[0] ? 1 : -1))
+      .map(([date, rows]) => ({ date, label: formatSectionLabel(date), rows }));
+  } catch (e) {
+    console.error('Failed to load times', e);
+  }
 }
 
 const staff = ref<Array<{ id: number; first_name: string; last_name: string }>>([]);
@@ -295,6 +329,7 @@ async function saveAdd() {
       longitude: coords?.longitude ?? undefined,
     };
     await createTime(payload as any);
+    await loadTimes();
     closeAdd();
   } catch (e: any) {
     const data = e?.response?.data;
@@ -308,6 +343,9 @@ async function saveAdd() {
     saving.value = false;
   }
 }
+
+// Initial load of times list
+loadTimes();
 
 function getCoords(): Promise<{ latitude: number; longitude: number } | null> {
   return new Promise((resolve) => {
