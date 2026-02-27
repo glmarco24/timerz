@@ -3,7 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\TimeController;
+use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\MembershipController;
 
 /*
 |--------------------------------------------------------------------------
@@ -23,7 +24,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/me', [AuthController::class, 'update']);
     Route::post('/logout', [AuthController::class, 'logout']);
 
-    // Time-related endpoints
-    Route::get('/time', [TimeController::class, 'index']);
+    Route::get('/companies', [CompanyController::class, 'index']);
+    Route::get('/companies/{company}/staff', [MembershipController::class, 'staff']);
 
 });
