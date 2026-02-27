@@ -79,10 +79,62 @@
                   <div class="text-xs text-gray-500">{{ row.company }}</div>
                 </div>
               </div>
-              <div class="col-span-4 md:col-span-1 text-sm text-gray-700">{{ row.in }}</div>
-              <div class="col-span-4 md:col-span-1 text-sm text-gray-700">{{ row.out }}</div>
+              <div class="col-span-4 md:col-span-1 text-sm">
+                <template v-if="isEditing(row.id, 'start')">
+                  <div class="flex items-center gap-2">
+                    <div class="w-40">
+                      <Datepicker
+                        :ref="(el: any) => setEditRef(row.id, 'start', el)"
+                        v-model="editing.value"
+                        time-picker
+                        :is-24="true"
+                        :enable-seconds="false"
+                        model-type="format"
+                        format="HH:mm"
+                        :minutes-increment="1"
+                        :teleport="true"
+                        input-class="w-full rounded-md border border-gray-300 px-3 py-2"
+                      />
+                    </div>
+                  </div>
+                </template>
+                <template v-else>
+                  <span
+                    :class="[row.status === 'Deleted' ? 'text-gray-400 line-through' : 'text-gray-700', row.status !== 'Deleted' ? 'cursor-pointer underline decoration-dotted' : '']"
+                    @click="row.status !== 'Deleted' && startEdit(row.id, 'start', row.in)">
+                    {{ row.in }}
+                  </span>
+                </template>
+              </div>
+              <div class="col-span-4 md:col-span-1 text-sm">
+                <template v-if="isEditing(row.id, 'end')">
+                  <div class="flex items-center gap-2">
+                    <div class="w-40">
+                      <Datepicker
+                        :ref="(el: any) => setEditRef(row.id, 'end', el)"
+                        v-model="editing.value"
+                        time-picker
+                        :is-24="true"
+                        :enable-seconds="false"
+                        model-type="format"
+                        format="HH:mm"
+                        :minutes-increment="1"
+                        :teleport="true"
+                        input-class="w-full rounded-md border border-gray-300 px-3 py-2"
+                      />
+                    </div>
+                  </div>
+                </template>
+                <template v-else>
+                  <span
+                    :class="[row.status === 'Deleted' ? 'text-gray-400 line-through' : 'text-gray-700', row.status !== 'Deleted' ? 'cursor-pointer underline decoration-dotted' : '']"
+                    @click="row.status !== 'Deleted' && startEdit(row.id, 'end', row.out)">
+                    {{ row.out }}
+                  </span>
+                </template>
+              </div>
               <div class="col-span-4 md:col-span-1 text-sm text-gray-700">{{ row.break }}</div>
-              <div class="col-span-6 md:col-span-2 text-sm text-gray-700">{{ row.hours }}</div>
+              <div :class="['col-span-6 md:col-span-2 text-sm', row.status === 'Deleted' ? 'text-gray-400 line-through' : 'text-gray-700']">{{ row.hours }}</div>
               <div class="col-span-3 md:col-span-1 flex gap-1">
                 <span class="material-symbols-outlined text-sky-700 text-base">chat</span>
                 <span class="material-symbols-outlined text-sky-700 text-base">note</span>
@@ -100,7 +152,6 @@
             </div>
           </template>
 
-          <div class="px-4 py-3 text-xs text-gray-600">2 hours 29 minutes</div>
         </div>
       </div>
     </div>
@@ -189,8 +240,8 @@ import SideMenu from '../../components/layout/SideMenu.vue';
 import TopBar from '../../components/layout/TopBar.vue';
 import Datepicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
-import { ref, reactive, watch } from 'vue';
-import { getTimeFormData, getCompanyStaff, createTime, getTimes, type TimeListItem } from '../../api/time.api';
+import { ref, reactive, watch, nextTick } from 'vue';
+import { getTimeFormData, getCompanyStaff, createTime, getTimes, updateTime, type TimeListItem } from '../../api/time.api';
 
 interface Row { id: number; name: string; company: string; in: string; out: string; break: string; hours: string; status: string }
 interface Section { date: string; label: string; rows: Row[] }
@@ -212,6 +263,14 @@ const form = reactive({
 
 const errors = reactive<Record<string, string>>({});
 const saving = ref(false);
+const editing = reactive<{ id: number | null; field: 'start' | 'end' | null; value: string | '' }>({ id: null, field: null, value: '' });
+const originalEditValue = ref<string>('');
+const editPicker = ref<any>(null);
+function setEditRef(rowId: number, field: 'start' | 'end', el: any) {
+  if (rowId === editing.id && field === editing.field) {
+    editPicker.value = el;
+  }
+}
 
 function openAdd() {
   addOpen.value = true;
@@ -330,6 +389,7 @@ async function saveAdd() {
     };
     await createTime(payload as any);
     await loadTimes();
+    resetModalState();
     closeAdd();
   } catch (e: any) {
     const data = e?.response?.data;
@@ -347,6 +407,18 @@ async function saveAdd() {
 // Initial load of times list
 loadTimes();
 
+function resetModalState() {
+  form.company_id = '' as any;
+  form.date = new Date().toISOString().slice(0, 10);
+  form.start_time = '';
+  form.end_time = '';
+  form.benefit = '';
+  form.comment = '';
+  form.user_id = '' as any;
+  staff.value = [];
+  Object.keys(errors).forEach(k => delete (errors as any)[k]);
+}
+
 function getCoords(): Promise<{ latitude: number; longitude: number } | null> {
   return new Promise((resolve) => {
     if (!('geolocation' in navigator)) return resolve(null);
@@ -359,4 +431,52 @@ function getCoords(): Promise<{ latitude: number; longitude: number } | null> {
 }
 
 // Using @vuepic/vue-datepicker for 24h time selection
+
+function isEditing(id: number, field: 'start' | 'end') {
+  return editing.id === id && editing.field === field;
+}
+function startEdit(id: number, field: 'start' | 'end', current: string) {
+  editing.id = id;
+  editing.field = field;
+  editing.value = current && current !== '-' ? current : '';
+  originalEditValue.value = editing.value;
+  nextTick(() => {
+    try {
+      const inst: any = editPicker.value;
+      if (inst && typeof inst.openMenu === 'function') inst.openMenu();
+      else if (inst?.$el) {
+        const input = inst.$el.querySelector('input');
+        if (input) (input as HTMLInputElement).focus();
+      }
+    } catch {}
+  });
+}
+function cancelEdit() {
+  editing.id = null;
+  editing.field = null;
+  editing.value = '';
+}
+async function saveEdit(id: number) {
+  if (!editing.field) return;
+  try {
+    const payload: any = {};
+    if (editing.field === 'start') payload.start_time = editing.value || null;
+    if (editing.field === 'end') payload.end_time = editing.value || null;
+    await updateTime(id, payload);
+    cancelEdit();
+    await loadTimes();
+  } catch (e: any) {
+    const errs = e?.response?.data?.errors;
+    const msg = errs ? (Object.values(errs).flat() as any[]).join('\n') : (e?.response?.data?.message || 'Failed to update');
+    alert(String(msg));
+  }
+}
+
+// Auto-save on apply if value changed
+watch(() => editing.value, (val) => {
+  if (editing.id && val !== originalEditValue.value) {
+    // Fire and forget; saveEdit handles state cleanup
+    saveEdit(editing.id);
+  }
+});
 </script>

@@ -49,7 +49,6 @@ class User extends Authenticatable
         ];
     }
 
-    // Relationships
     public function memberships()
     {
         return $this->hasMany(Membership::class);
@@ -62,9 +61,6 @@ class User extends Authenticatable
             ->withTimestamps();
     }
 
-    /**
-     * Companies where the user is an active owner.
-     */
     public function activeOwnerCompanies()
     {
         return $this->companies()->wherePivot('role', 'owner')->wherePivot('status', 'active');

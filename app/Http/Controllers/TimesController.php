@@ -6,6 +6,8 @@ use App\Http\Requests\Time\StoreTimeRequest;
 use App\Models\Time;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use App\Http\Requests\Time\UpdateTimeRequest;
 
 class TimesController extends Controller
 {
@@ -15,12 +17,11 @@ class TimesController extends Controller
         $companyIds = $user->activeOwnerCompanies()->pluck('companies.id');
 
         $times = Time::with([
-                'user:id,first_name,last_name',
-                'company:id,name',
-            ])
+            'user:id,first_name,last_name',
+            'company:id,name',
+        ])
             ->whereIn('company_id', $companyIds)
-            ->orderByDesc('date')
-            ->orderByDesc('start_time')
+            ->orderByDesc('created_at')
             ->get([
                 'id', 'user_id', 'company_id', 'date', 'start_time', 'end_time', 'status', 'benefit', 'comment'
             ]);
@@ -41,12 +42,17 @@ class TimesController extends Controller
 
         $data = $request->validated();
 
+        $status = isset($data['end_time']) && $data['end_time'] !== null && $data['end_time'] !== ''
+            ? 'Completed'
+            : 'At work';
+
         $time = Time::create([
             'user_id' => $data['user_id'],
             'company_id' => $data['company_id'],
             'date' => $data['date'],
             'start_time' => $data['start_time'],
             'end_time' => $data['end_time'] ?? null,
+            'status' => $status,
             'benefit' => $data['benefit'] ?? null,
             'comment' => $data['comment'],
             'latitude' => $data['latitude'] ?? null,
@@ -57,5 +63,44 @@ class TimesController extends Controller
             'message' => 'Saved',
             'time' => $time,
         ], 201);
+    }
+
+    public function update(UpdateTimeRequest $request, Time $time): JsonResponse
+    {
+        $start = $request->input('start_time');
+        $end = $request->input('end_time');
+
+        $newStart = is_string($start) ? $start : $time->start_time;
+        $newEnd = is_string($end) ? $end : $time->end_time;
+
+        // Create a new record with copied values and new times; mark old as Deleted
+        $newStatus = $newEnd ? 'Completed' : 'At work';
+
+        $payload = [
+            'user_id' => $time->user_id,
+            'company_id' => $time->company_id,
+            'date' => $time->date,
+            'start_time' => $newStart,
+            'end_time' => $newEnd ?: null,
+            'status' => $newStatus,
+            'benefit' => $time->benefit,
+            'comment' => $time->comment,
+            'latitude' => $time->latitude,
+            'longitude' => $time->longitude,
+        ];
+
+        $newTime = DB::transaction(function () use ($time, $payload) {
+            // Mark old as deleted
+            $time->status = 'Deleted';
+            $time->save();
+
+            // Create new
+            return Time::create($payload);
+        });
+
+        return response()->json([
+            'message' => 'Updated',
+            'time' => $newTime->load(['user:id,first_name,last_name', 'company:id,name']),
+        ]);
     }
 }

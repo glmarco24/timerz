@@ -46,3 +46,8 @@ export async function getTimes() {
   const { data } = await http.get('/api/times');
   return data as { times: TimeListItem[] };
 }
+
+export async function updateTime(id: number, payload: { start_time?: string | null; end_time?: string | null }) {
+  const { data } = await http.put(`/api/times/${id}`, payload);
+  return data as { message: string; time: TimeListItem };
+}

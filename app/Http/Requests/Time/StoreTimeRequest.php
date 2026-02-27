@@ -5,6 +5,7 @@ namespace App\Http\Requests\Time;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
+use App\Models\Time;
 
 class StoreTimeRequest extends FormRequest
 {
@@ -47,7 +48,23 @@ class StoreTimeRequest extends FormRequest
                     $validator->errors()->add('end_time', 'End time must be later than start time.');
                 }
             }
+
+            // Prevent overlapping start time within another record for the same worker on the same date
+            $userId = (int) $this->input('user_id');
+            $date = $this->input('date');
+            if ($userId && is_string($date) && is_string($start) && preg_match('/^\d{2}:\d{2}$/', $start)) {
+                $overlaps = Time::query()
+                    ->where('user_id', $userId)
+                    ->where('date', $date)
+                    ->whereNotNull('end_time')
+                    ->where('start_time', '<=', $start)
+                    ->where('end_time', '>', $start)
+                    ->exists();
+
+                if ($overlaps) {
+                    $validator->errors()->add('start_time', 'Start time overlaps with an existing time entry.');
+                }
+            }
         });
     }
 }
-
