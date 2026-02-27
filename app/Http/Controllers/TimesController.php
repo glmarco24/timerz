@@ -73,7 +73,6 @@ class TimesController extends Controller
         $newStart = is_string($start) ? $start : $time->start_time;
         $newEnd = is_string($end) ? $end : $time->end_time;
 
-        // Create a new record with copied values and new times; mark old as Deleted
         $newStatus = $newEnd ? 'Completed' : 'At work';
 
         $payload = [
@@ -90,11 +89,9 @@ class TimesController extends Controller
         ];
 
         $newTime = DB::transaction(function () use ($time, $payload) {
-            // Mark old as deleted
             $time->status = 'Deleted';
             $time->save();
 
-            // Create new
             return Time::create($payload);
         });
 
