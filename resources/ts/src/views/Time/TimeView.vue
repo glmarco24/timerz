@@ -125,6 +125,18 @@
             <input type="date" v-model="form.date" class="w-full rounded-md border border-gray-300 px-3 py-2" />
           </div>
           <div>
+            <label class="block text-sm text-gray-700 mb-1">Workplace</label>
+            <select v-model="form.company_id" class="w-full rounded-md border border-gray-300 px-3 py-2">
+              <option v-for="wp in workplaces" :key="wp.id" :value="wp.id">{{ wp.name }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm text-gray-700 mb-1">Staff</label>
+            <select v-model="form.user_id" class="w-full rounded-md border border-gray-300 px-3 py-2">
+              <option v-for="u in staff" :key="u.id" :value="u.id">{{ u.first_name }} {{ u.last_name }}</option>
+            </select>
+          </div>
+          <div>
             <label class="block text-sm text-gray-700 mb-1">Benefit</label>
             <input type="text" placeholder="e.g. Regular" v-model="form.benefit" class="w-full rounded-md border border-gray-300 px-3 py-2" />
           </div>
@@ -158,6 +170,8 @@
 import SideMenu from '../../components/layout/SideMenu.vue';
 import TopBar from '../../components/layout/TopBar.vue';
 import { ref, reactive } from 'vue';
+import { getTimeFormData } from '../../api/time.api';
+import { watch } from 'vue';
 
 interface Row { id: number; name: string; in: string; out: string; break: string; hours: string }
 interface Section { date: string; label: string; rows: Row[] }
@@ -181,18 +195,41 @@ const sections = ref<Section[]>([
 ]);
 
 const addOpen = ref(false);
+const workplaces = ref<Array<{ id: number; name: string }>>([]);
 const today = new Date().toISOString().slice(0, 10);
 const form = reactive({
+  company_id: '' as number | '',
   date: today,
   start_time: '',
   end_time: '',
   benefit: '',
   comment: '',
+  user_id: '' as number | '',
 });
 
 function openAdd() {
   addOpen.value = true;
+  getTimeFormData()
+    .then((data: any) => {
+      workplaces.value = data?.workplaces || [];
+      if (!form.company_id && workplaces.value.length) form.company_id = workplaces.value[0].id;
+      if (data?.defaults?.date) form.date = String(data.defaults.date);
+    })
+    .catch(() => {});
 }
+
+const staff = ref<Array<{ id: number; first_name: string; last_name: string }>>([]);
+watch(
+  () => form.company_id,
+  async (val) => {
+    if (!val) { staff.value = []; form.user_id = '' as any; return; }
+    try {
+      const data: any = await getTimeFormData(Number(val));
+      staff.value = data?.staff || [];
+      if (!form.user_id && staff.value.length) form.user_id = staff.value[0].id;
+    } catch {}
+  }
+);
 function closeAdd() {
   addOpen.value = false;
 }

@@ -24,5 +24,15 @@ class Company extends Model
             ->withPivot(['role', 'status'])
             ->withTimestamps();
     }
-}
 
+    /**
+     * Users with an active membership in this company.
+     */
+    public function activeMembers()
+    {
+        return $this->belongsToMany(User::class, 'memberships')
+            ->wherePivot('status', 'active')
+            ->withPivot(['role', 'status'])
+            ->withTimestamps();
+    }
+}
