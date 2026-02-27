@@ -125,8 +125,6 @@ const form = reactive({
   password: '',
 });
 
-
-
 const initials = computed(() => {
   const a = (form.first_name || '').trim()[0] || '';
   const b = (form.last_name || '').trim()[0] || '';

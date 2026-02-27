@@ -191,7 +191,7 @@
             <label class="block text-sm text-gray-700 mb-1">Benefit</label>
             <input type="text" placeholder="e.g. Regular" v-model="form.benefit" class="w-full rounded-md border border-gray-300 px-3 py-2" />
           </div>
-          
+
           <div>
             <label class="block text-sm text-gray-700 mb-1">Start</label>
             <Datepicker
@@ -353,7 +353,6 @@ function closeAdd() {
 }
 async function saveAdd() {
   if (saving.value) return;
-  // client-side validation
   Object.keys(errors).forEach(k => delete (errors as any)[k]);
   const req: Array<[keyof typeof form, string]> = [
     ['company_id', 'Workplace is required'],
@@ -404,7 +403,6 @@ async function saveAdd() {
   }
 }
 
-// Initial load of times list
 loadTimes();
 
 function resetModalState() {
@@ -430,8 +428,6 @@ function getCoords(): Promise<{ latitude: number; longitude: number } | null> {
   });
 }
 
-// Using @vuepic/vue-datepicker for 24h time selection
-
 function isEditing(id: number, field: 'start' | 'end') {
   return editing.id === id && editing.field === field;
 }
@@ -451,11 +447,13 @@ function startEdit(id: number, field: 'start' | 'end', current: string) {
     } catch {}
   });
 }
+
 function cancelEdit() {
   editing.id = null;
   editing.field = null;
   editing.value = '';
 }
+
 async function saveEdit(id: number) {
   if (!editing.field) return;
   try {
@@ -472,10 +470,8 @@ async function saveEdit(id: number) {
   }
 }
 
-// Auto-save on apply if value changed
 watch(() => editing.value, (val) => {
   if (editing.id && val !== originalEditValue.value) {
-    // Fire and forget; saveEdit handles state cleanup
     saveEdit(editing.id);
   }
 });

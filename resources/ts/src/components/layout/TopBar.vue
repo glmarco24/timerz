@@ -8,15 +8,10 @@
         <div class="text-2xl sm:text-3xl font-bold leading-none">Timetjek</div>
         <div v-if="title">
           <h1 class="text-lg sm:text-xl font-semibold leading-tight">{{ title }}</h1>
-          <p v-if="subtitle" class="hidden md:block text-sky-600 text-xs mt-1">{{ subtitle }}</p>
         </div>
-      </div>
-      <div class="hidden sm:flex items-center gap-2">
-        <slot name="actions" />
       </div>
     </div>
   </header>
-  
 </template>
 
 <script setup lang="ts">

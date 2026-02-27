@@ -13,18 +13,10 @@
       </div>
     </div>
   </div>
-  
+
 </template>
 
 <script setup lang="ts">
 import SideMenu from '../components/layout/SideMenu.vue';
 import TopBar from '../components/layout/TopBar.vue';
-import { useAuth } from '../composables/useAuth';
-import { computed } from 'vue';
-
-const { state } = useAuth();
-const user = computed(() => (state.user ?? {}) as Record<string, any>);
-const fullName = computed(() => `${user.value.first_name ?? ''} ${user.value.last_name ?? ''}`.trim() || 'User');
-
- 
 </script>
